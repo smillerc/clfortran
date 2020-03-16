@@ -1,0 +1,16 @@
+{
+	"name": "OpenCL",
+	"image": "smillerc/opencl-dev",
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash",
+		"fortran-ls.executablePath": "/home/developer/.local/bin/fortls"
+	},
+	"extensions": [
+		"ms-vscode.cmake-tools",
+		"twxs.cmake",
+		"krvajalm.fortran",
+		"hansec.fortran-ls",
+		"eamodio.gitlens",
+		"gimly81.fortran"
+	]
+}
