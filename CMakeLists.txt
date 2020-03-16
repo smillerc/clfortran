@@ -48,6 +48,39 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/include/version.h.in"
 # Include the newly generated version.h file
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
+set(CMAKE_Fortran_FLAGS_DEBUG "-O0 -g -fbacktrace")
+
+# if(CMAKE_Fortran_COMPILER_ID STREQUAL GNU)
+
+#   list(APPEND CMAKE_Fortran_FLAGS "-cpp -std=f2018 -ffree-line-length-none")
+#   set(CMAKE_Fortran_FLAGS_DEBUG
+#       "-O0 -g
+#  -Wall -Wextra -Wpedantic\
+#  -Wconversion \
+#  -fimplicit-none -fbacktrace \
+#  -fcheck=all -ffpe-trap=zero,overflow,invalid,underflow -finit-real=nan")
+
+#   set(CMAKE_Fortran_FLAGS_RELEASE "-O3")
+
+#   if(ENABLE_PROFILING)
+#     set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -pg -g")
+#   endif(ENABLE_PROFILING)
+
+# endif()
+
+# # compiler flags for ifort
+# if(CMAKE_Fortran_COMPILER_ID STREQUAL Intel)
+#   if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19.0.3)
+#     list(
+#       APPEND CMAKE_Fortran_FLAGS "-fpp -stand f15 -diag-disable 5268 -diag-disable 8770"
+#     )
+#   else()
+#     list(
+#       APPEND CMAKE_Fortran_FLAGS  "-fpp -stand f18 -diag-disable 5268 -diag-disable 8770"
+#     )
+#   endif()
+# endif()
+
 add_subdirectory(src)
 
 if(NOT ENABLE_TESTING)

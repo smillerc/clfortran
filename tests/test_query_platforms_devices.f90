@@ -139,6 +139,7 @@ subroutine query_platform_info(platform_id)
     allocate(platform_version(temp_size))
     err = clGetPlatformInfo(platform_id, CL_PLATFORM_VERSION, temp_size, C_LOC(platform_version), temp_size)
     print *, 'Version: ', platform_version
+    print*, 'sum(len_trim(platform_version))', sum(len_trim(platform_version))
     deallocate(platform_version)
 
     ! Name.

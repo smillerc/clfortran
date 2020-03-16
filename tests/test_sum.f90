@@ -34,36 +34,36 @@
             if((ierr /= CL_SUCCESS) .or. (num_platforms < 1)) print *, 'clGetPlatformIDs', ierr
             print '(a,i2)', 'Num Platforms: ', num_platforms
             allocate(platform_ids(num_platforms), stat=iallocerr)
-            if(iallocerr /= 0) stop 'memory allocation error'
+            if(iallocerr /= 0) error stop 'memory allocation error'
     ! whenever "&" appears in C subroutine (address-off) call,
     ! then C_LOC has to be used in Fortran
             ierr = clGetPlatformIDs(num_platforms, C_LOC(platform_ids), num_platforms)
-            if(ierr /= CL_SUCCESS) stop 'clGetPlatformIDs'
+            if(ierr /= CL_SUCCESS) error stop 'clGetPlatformIDs'
     
     ! Get device IDs only for platform 1
             iplatform = 1
     
             ierr = clGetDeviceIDs(platform_ids(iplatform), CL_DEVICE_TYPE_ALL, 0, C_NULL_PTR, num_devices)
-            if((ierr /= CL_SUCCESS) .or. (num_devices < 1)) stop 'clGetDeviceIDs'
+            if((ierr /= CL_SUCCESS) .or. (num_devices < 1)) error stop 'clGetDeviceIDs'
             print '(a,i2)', 'Num Devices: ', num_devices
             allocate(device_ids(num_devices), stat=iallocerr)
-            if(iallocerr /= 0) stop 'memory allocation error'
+            if(iallocerr /= 0) error stop 'memory allocation error'
     ! whenever "&" appears in C subroutine (address-off) call,
     ! then C_LOC has to be used in Fortran
             ierr = clGetDeviceIDs(platform_ids(iplatform), CL_DEVICE_TYPE_ALL, num_devices, C_LOC(device_ids), num_devices)
-            if(ierr /= CL_SUCCESS) stop 'clGetDeviceIDs'
+            if(ierr /= CL_SUCCESS) error stop 'clGetDeviceIDs'
     
     ! Get device info only for device 1
             idevice = 1
     
             ierr = clGetDeviceInfo(device_ids(idevice), CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(device_cu), C_LOC(device_cu), iret)
-            if(ierr /= CL_SUCCESS) stop 'clGetDeviceInfo'
+            if(ierr /= CL_SUCCESS) error stop 'clGetDeviceInfo'
             ierr = clGetDeviceInfo(device_ids(idevice), CL_DEVICE_NAME, zero_size, C_NULL_PTR, iret)
-            if(ierr /= CL_SUCCESS) stop 'clGetDeviceInfo'
+            if(ierr /= CL_SUCCESS) error stop 'clGetDeviceInfo'
             allocate(device_name(iret), stat=iallocerr)
-            if(iallocerr /= 0) stop 'allocate'
+            if(iallocerr /= 0) error stop 'allocate'
             ierr = clGetDeviceInfo(device_ids(idevice), CL_DEVICE_NAME, sizeof(device_name), C_LOC(device_name), iret)
-            if(ierr /= CL_SUCCESS) stop 'clGetDeviceInfo'
+            if(ierr /= CL_SUCCESS) error stop 'clGetDeviceInfo'
             write(*, '(a,i2,a,i3,a)', advance='no') ' Device (#', idevice, ', Compute Units: ', device_cu, ') - '
             print *, device_name(1:iret)
             deallocate(device_name)
@@ -74,14 +74,14 @@
             ctx_props(2) = platform_ids(iplatform)
             ctx_props(3) = 0
             context = clCreateContext(C_LOC(ctx_props), num_devices, C_LOC(device_ids), C_NULL_FUNPTR, C_NULL_PTR, ierr)
-            if(ierr /= CL_SUCCESS) stop 'clCreateContext'
+            if(ierr /= CL_SUCCESS) error stop 'clCreateContext'
     
             cmd_queue = clCreateCommandQueue(context, device_ids(idevice), CL_QUEUE_PROFILING_ENABLE, ierr)
-            if(ierr /= CL_SUCCESS) stop 'clCreateCommandQueue'
+            if(ierr /= CL_SUCCESS) error stop 'clCreateCommandQueue'
     
     ! read kernel from disk
             open(iunit, file='sum.cl', access='direct', status='old', action='read', iostat=ierr, recl=1)
-            if(ierr /= 0) stop 'Cannot open file sum.cl'
+            if(ierr /= 0) error stop 'Cannot open file sum.cl'
             irec = 1
     10      continue
             read(iunit, rec=irec, iostat=ierr) char
@@ -89,9 +89,9 @@
             irec = irec + 1
             goto 10
     11      continue
-            if(irec == 0) stop 'nothing read'
+            if(irec == 0) error stop 'nothing read'
             allocate(source(irec + 1), stat=iallocerr)
-            if(iallocerr /= 0) stop 'allocate'
+            if(iallocerr /= 0) error stop 'allocate'
             do i = 1, irec
               read(iunit, rec=i, iostat=ierr) source(i:i)
             enddo
@@ -105,13 +105,13 @@
     
             psource = C_LOC(source) ! pointer to source code
             prog = clCreateProgramWithSource(context, 1, C_LOC(psource), C_NULL_PTR, ierr)
-            if(ierr /= CL_SUCCESS) stop 'clCreateProgramWithSource'
+            if(ierr /= CL_SUCCESS) error stop 'clCreateProgramWithSource'
     
             print '(///)'
     
     ! check if program has uploaded successfully to CL device
             ierr = clGetProgramInfo(prog, CL_PROGRAM_SOURCE, sizeof(source2), C_LOC(source2), iret)
-            if(ierr /= CL_SUCCESS) stop 'clGetProgramInfo'
+            if(ierr /= CL_SUCCESS) error stop 'clGetProgramInfo'
             print '(a)', '**** code retrieved from device start ****'
             print '(1024a)', source2(1:min(iret, 1024))
             print '(a)', '**** code retrieved from device end ****'
@@ -128,7 +128,7 @@
             if(ierr /= CL_SUCCESS) then
               print *, 'clBuildProgram', ierr
               ierr = clGetProgramBuildInfo(prog, device_ids(idevice), CL_PROGRAM_BUILD_LOG, sizeof(retinfo), C_LOC(retinfo), iret)
-              if(ierr /= 0) stop 'clGetProgramBuildInfo'
+              if(ierr /= 0) error stop 'clGetProgramBuildInfo'
               print '(a)', 'build log start'
               print '(1024a)', retinfo(1:min(iret, 1024))
               print '(a)', 'build log end'
@@ -142,10 +142,10 @@
             enddo
             c_kernel_name(irec + 1) = C_NULL_CHAR
             kernel = clCreateKernel(prog, C_LOC(c_kernel_name), ierr)
-            if(ierr /= 0) stop 'clCreateKernel'
+            if(ierr /= 0) error stop 'clCreateKernel'
     
             ierr = clReleaseProgram(prog)
-            if(ierr /= 0) stop 'clReleaseProgram'
+            if(ierr /= 0) error stop 'clReleaseProgram'
     
             isize = 1000
             size_in_bytes = int(isize, 8) * 4_8
@@ -164,38 +164,38 @@
     
     ! allocate device memory
             cl_vec1 = clCreateBuffer(context, CL_MEM_READ_ONLY, size_in_bytes, C_NULL_PTR, ierr)
-            if(ierr /= 0) stop 'clCreateBuffer'
+            if(ierr /= 0) error stop 'clCreateBuffer'
             cl_vec2 = clCreateBuffer(context, CL_MEM_READ_WRITE, size_in_bytes, C_NULL_PTR, ierr)
-            if(ierr /= 0) stop 'clCreateBuffer'
+            if(ierr /= 0) error stop 'clCreateBuffer'
     
     ! copy data to device memory
             ierr = clEnqueueWriteBuffer(cmd_queue, cl_vec1, CL_TRUE, 0_8, size_in_bytes, C_LOC(vec1), 0, C_NULL_PTR, C_NULL_PTR)
     ! 0_8 is a zero of kind=8
-            if(ierr /= 0) stop 'clEnqueueWriteBuffer'
+            if(ierr /= 0) error stop 'clEnqueueWriteBuffer'
             ierr = clEnqueueWriteBuffer(cmd_queue, cl_vec2, CL_TRUE, 0_8, size_in_bytes, C_LOC(vec2), 0, C_NULL_PTR, C_NULL_PTR)
-            if(ierr /= 0) stop 'clEnqueueWriteBuffer'
+            if(ierr /= 0) error stop 'clEnqueueWriteBuffer'
     
     ! set the kernel arguments
             ierr = clSetKernelArg(kernel, 0, sizeof(isize), C_LOC(isize))
-            if(ierr /= 0) stop 'clSetKernelArg'
+            if(ierr /= 0) error stop 'clSetKernelArg'
             ierr = clSetKernelArg(kernel, 1, sizeof(cl_vec1), C_LOC(cl_vec1))
-            if(ierr /= 0) stop 'clSetKernelArg'
+            if(ierr /= 0) error stop 'clSetKernelArg'
             ierr = clSetKernelArg(kernel, 2, sizeof(cl_vec2), C_LOC(cl_vec2))
-            if(ierr /= 0) stop 'clSetKernelArg'
+            if(ierr /= 0) error stop 'clSetKernelArg'
     
     ! get the local size for the kernel
             ierr = clGetKernelWorkGroupInfo(kernel, device_ids(idevice), &
                                             CL_KERNEL_WORK_GROUP_SIZE, sizeof(localsize), C_LOC(localsize), iret)
-            if(ierr /= 0) stop 'clGetKernelWorkGroupInfo'
+            if(ierr /= 0) error stop 'clGetKernelWorkGroupInfo'
             globalsize = int(isize, 8)
             if(mod(globalsize, localsize) /= 0) globalsize = globalsize + localsize - mod(globalsize, localsize)
     
     ! execute the kernel
             ierr = clEnqueueNDRangeKernel(cmd_queue, kernel, 1, C_NULL_PTR, &
                                           C_LOC(globalsize), C_LOC(localsize), 0, C_NULL_PTR, C_NULL_PTR)
-            if(ierr /= 0) stop 'clEnqueueNDRangeKernel'
+            if(ierr /= 0) error stop 'clEnqueueNDRangeKernel'
             ierr = clFinish(cmd_queue)
-            if(ierr /= 0) stop 'clFinish'
+            if(ierr /= 0) error stop 'clFinish'
     
             print '(a)', 'sent to device:'
             do i = 1, 10
@@ -204,7 +204,7 @@
     
     ! read the resulting vector from device memory
             ierr = clEnqueueReadBuffer(cmd_queue, cl_vec2, CL_TRUE, 0_8, size_in_bytes, C_LOC(vec2), 0, C_NULL_PTR, C_NULL_PTR)
-            if(ierr /= 0) stop 'clEnqueueReadBuffer'
+            if(ierr /= 0) error stop 'clEnqueueReadBuffer'
     
             print '(a)', 'retrieved from device:'
             do i = 1, 10
@@ -212,11 +212,11 @@
             enddo
     
             ierr = clReleaseKernel(kernel)
-            if(ierr /= 0) stop 'clReleaseKernel'
+            if(ierr /= 0) error stop 'clReleaseKernel'
             ierr = clReleaseCommandQueue(cmd_queue)
-            if(ierr /= 0) stop 'clReleaseCommandQueue'
+            if(ierr /= 0) error stop 'clReleaseCommandQueue'
             ierr = clReleaseContext(context)
-            if(ierr /= 0) stop 'clReleaseContext'
+            if(ierr /= 0) error stop 'clReleaseContext'
     
           end
     
